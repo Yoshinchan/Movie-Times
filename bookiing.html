@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinema Flix - Movie Booking</title>
+  <style>
+    :root {
+      --bg-dark: #12181f;
+      --card-bg: #1a232e;
+      --accent: #00a896;
+      --accent-hover: #028090;
+      --text-main: #e0e6ed;
+      --text-muted: #8a99ad;
+      --seat-available: #4a5568;
+      --seat-selected: #00a896;
+      --seat-sold: #2d3748;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Navbar */
+    header {
+      background-color: #0d1117;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin: 0 1rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover, nav a.active {
+      color: #fff;
+    }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      justify-content: center;
+      background-color: #171e27;
+      padding: 1rem;
+      gap: 2rem;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    .step {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .step.active {
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Main Content Layout */
+    .container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Sidebar Movie Info */
+    .movie-sidebar {
+      background-color: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 8px;
+    }
+
+    .poster {
+      width: 100%;
+      height: 380px;
+      background-color: #2a3441;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      background-size: cover;
+      background-position: center;
+    }
+
+    .movie-title {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .movie-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .synopsis {
+      font-size: 0.9rem;
+      color: #b0bec5;
+      line-height: 1.4;
+    }
+
+    /* Main Booking Panel */
+    .booking-panel {
+      background-color: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    select, input[type="date"] {
+      background-color: #12181f;
+      color: #fff;
+      border: 1px solid #2d3748;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .showtimes {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .time-btn {
+      background-color: #12181f;
+      color: var(--text-main);
+      border: 1px solid #2d3748;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .time-btn.active {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Seating Screen & Grid */
+    .screen-container {
+      perspective: 400px;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .screen {
+      background-color: #e0e6ed;
+      height: 12px;
+      width: 70%;
+      margin: 0 auto 1.5rem auto;
+      transform: rotateX(-30deg);
+      box-shadow: 0 3px 10px rgba(255, 255, 255, 0.7);
+      border-radius: 2px;
+    }
+
+    .seats-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      justify-content: center;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .seat {
+      width: 24px;
+      height: 24px;
+      background-color: var(--seat-available);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .seat:hover:not(.sold) {
+      transform: scale(1.15);
+    }
+
+    .seat.selected {
+      background-color: var(--seat-selected);
+    }
+
+    .seat.sold {
+      background-color: var(--seat-sold);
+      cursor: not-allowed;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend-item .seat {
+      cursor: default;
+    }
+
+    /* Checkout Bar */
+    .checkout-bar {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary {
+      font-size: 0.9rem;
+    }
+
+    .summary-price {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .btn-pay {
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-pay:hover {
+      background-color: var(--accent-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">Movie <span>Times</span></div>
+    <nav>
+                  <a href="./home.html">Home</a>
+            <a href="./login.html">Login</a>
+            <a href="">Genres</a>
+            <a href="./contact .html">Contact</a>
+            <a href="./bookiing.html">Booking</a>
+    </nav>
+  </header>
+
+  <div class="stepper">
+    <span class="step">1. Select Movie</span>
+    <span class="step active">2. Select Session & Seats</span>
+    <span class="step">3. Payment</span>
+  </div>
+
+  <div class="container">
+    <aside class="movie-sidebar">
+      <div class="poster">Galactic Odyssey Poster</div>
+      <h2 class="movie-title">Galactic Odyssey</h2>
+      <p class="movie-meta">Sci-Fi | PG-13 | 142 min</p>
+      <p class="synopsis">
+        An astronaut travels through a wormhole in space in an attempt to ensure humanity's survival.
+      </p>
+    </aside>
+
+    <main class="booking-panel">
+      <div class="controls">
+        <div class="control-group">
+          <label for="date">Date</label>
+          <input type="date" id="date" value="2026-09-04">
+        </div>
+        <div class="control-group">
+          <label for="cinema">Cinema</label>
+          <select id="cinema">
+            <option>AMC Empire 25</option>
+            <option>Regal Times Square</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="showtimes">
+        <button class="time-btn">11:30 AM</button>
+        <button class="time-btn">1:45 PM</button>
+        <button class="time-btn active">4:15 PM</button>
+        <button class="time-btn">7:00 PM</button>
+      </div>
+
+      <div class="screen-container">
+        <div class="screen"></div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">SCREEN 5</p>
+        
+        <div class="seats-grid" id="seatsGrid"></div>
+
+        <div class="legend">
+          <div class="legend-item"><div class="seat"></div> Available</div>
+          <div class="legend-item"><div class="seat sold"></div> Sold</div>
+          <div class="legend-item"><div class="seat selected"></div> Selected</div>
+        </div>
+      </div>
+
+      <div class="checkout-bar">
+        <div class="summary">
+          <div>Seats Selected: <span id="selectedCount">0</span></div>
+          <div class="summary-price">Subtotal: $<span id="totalPrice">0.00</span></div>
+        </div>
+        <button class="btn-pay">CONTINUE TO PAYMENT</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const seatsContainer = document.getElementById('seatsGrid');
+    const selectedCount = document.getElementById('selectedCount');
+    const totalPrice = document.getElementById('totalPrice');
+    const TICKET_PRICE = 18.00;
+
+    // Generate Seats
+    const totalSeats = 60;
+    const soldSeats = [3, 4, 15, 16, 17, 28, 29, 42];
+
+    for (let i = 0; i < totalSeats; i++) {
+      const seat = document.createElement('div');
+      seat.classList.add('seat');
+      
+      if (soldSeats.includes(i)) {
+        seat.classList.add('sold');
+      }
+
+      seat.addEventListener('click', () => {
+        if (!seat.classList.contains('sold')) {
+          seat.classList.toggle('selected');
+          updateSummary();
+        }
+      });
+
+      seatsContainer.appendChild(seat);
+    }
+
+    function updateSummary() {
+      const selectedSeats = document.querySelectorAll('.seat.selected');
+      const count = selectedSeats.length;
+      selectedCount.innerText = count;
+      totalPrice.innerText = (count * TICKET_PRICE).toFixed(2);
+    }
+  </script>
+</body>
+</html>
